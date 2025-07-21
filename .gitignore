@@ -166,3 +166,5 @@ logs/
 .env.production
 config.json
 secrets.json
+
+.users.db
