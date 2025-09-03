@@ -8,6 +8,7 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str
     user: dict
+    refresh_token: str = None
 
 class TokenData(BaseModel):
     email: str
