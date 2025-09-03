@@ -4,7 +4,7 @@ from users.schemas import UserCreate, UserUpdate
 from typing import List
 from fastapi import HTTPException, status
 from datetime import datetime
-from auth.password import get_password_hash
+from auth.password import get_password_hash, verify_password
 
 # CREATE - Create a new user
 def create_user(db: Session, user: UserCreate) -> User:
@@ -24,6 +24,17 @@ def create_user(db: Session, user: UserCreate) -> User:
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    return db_user
+
+
+# Login - login user
+def login_user(db: Session, email: str, password: str) -> User:
+    db_user = db.query(User).filter(User.email == email).first()
+    if db_user is None or not verify_password(password, db_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
     return db_user
 
 # READ - Get all users
