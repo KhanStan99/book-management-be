@@ -1,34 +1,21 @@
 from fastapi import APIRouter, Depends, status
-from auth.utils import get_current_user, create_access_token, create_refresh_token
+from auth.utils import get_current_user
 from sqlalchemy.orm import Session
-from users.crud import create_user, get_users, get_user, login_user, update_user, delete_user
+from users.crud import create_user, get_users, get_user, update_user, delete_user
 from users.schemas import UserCreate, UserUpdate, UserResponse
+from pydantic import BaseModel
 from auth.schemas import LoginResponse
 from database.dependency import get_db
 from typing import List
 
 router = APIRouter()
 
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 @router.post("/users/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def api_create_user(user: UserCreate, db: Session = Depends(get_db)):
     return create_user(db, user)
-
-@router.post("/users/login", response_model=LoginResponse)
-def api_login_user(email: str, password: str, db: Session = Depends(get_db)):
-    user = login_user(db, email, password)
-    access_token = create_access_token(data={"sub": user.email})
-    refresh_token = create_refresh_token(data={"email": user.email})
-    return LoginResponse(
-        access_token=access_token,
-        token_type="bearer",
-        user={
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "is_active": user.is_active
-        },
-        refresh_token=refresh_token
-    )
 
 @router.get("/users/", response_model=List[UserResponse])
 def api_get_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
